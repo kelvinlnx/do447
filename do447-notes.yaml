@@ -123,3 +123,17 @@ TIPS:
   Variables
   =========
     boolean & floating point numbers doesn't need to be quoted.
+
+GARBAGE:
+  roles:
+    - role: role1
+      vars:
+        key1: value1
+        key2: value2 hellow
+    - role: role1
+      vars:
+        key1: abc
+        key2: def
+    - { role: role1, vars: { key1: no3, key2: three }}
+    - { role: role1, key1: no4, key2: four }
+    - { role: role1, key1: no5, key2: five }
