@@ -123,7 +123,7 @@ Inventory Variables
   ansible_connection: local|ssh|winrm              ╶┬╴ winrm is for Windows
   ansible_winrm_transport: basic/credssp            │
   ansible_winrm_server_cert_validation: ignore     ╶╯
-  ansible_port: 5986 
+  ansible_port: 5986
   ansible_user: <USERNAME>
   ansible_password: <PASSWORD>
 
