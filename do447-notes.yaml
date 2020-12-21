@@ -1,3 +1,10 @@
+Command Line Syntax:
+  ansible --list-host <HOST_PATTERN>
+  ansible <HOST_PATTERN> [-m <MODULE>] [-a "<MOD_OPT>=<VALUE>..."]
+  ansible-playbook <PLAYBOOK>.yml
+  ansible-inventory [--list] [--yaml]
+
+
 <LIST> =
   - hosta
   - hostb
@@ -61,12 +68,14 @@ ansible.cfg
   remote_user=<USER>
   ask_pass=False|true
 
-
   [privilege_escalation]
   become=true|False
   become_user=<USER>
   become_method=su|sudo|psexec
   become_ask_pass=true|False
+
+  [inventory]
+  enable_plugins=host_list, script, auto, yaml, ini, toml
 
 inventory.yaml
 ==============
@@ -89,7 +98,7 @@ inventory.yaml
 Variables Precedence
 --------------------
   <PROJECT>/
-    ├╴ansible.cfg
+    ├╴ansible.cfg                             # INI Syntax
     ├╴group_vars/
     │ ├╴all                     6
     │ └╴<GROUP_NAME>            4
@@ -101,7 +110,7 @@ Variables Precedence
     │ │ └╴<GROUP_NAME>          5
     │ ├╴host_vars/
     │ │ └╴<INVENTORY_HOSTNAME>  2
-    │ └╴<INVENTORY_FILE>        3h 8g
+    │ └╴<INVENTORY_FILE>        3h 8g         # INI Syntax
     └╴playbook.yaml
 
 Inventory Variables
