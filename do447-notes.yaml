@@ -1,0 +1,125 @@
+<LIST> =
+  - hosta
+  - hostb
+  - groupa
+
+<DICTIONARY> =
+  item: abc
+  msg: Hello World
+  value1: 12345
+  address: |
+    1, Block A,
+    ABC Avenue,
+    1234 FairyLand.
+  long_line: >
+    This is a very very very long single
+    line message that is written with
+    multiple repeats, repeating over
+    and over and over and over and over.
+
+
+---
+- name: <PLAY_NAME>
+  host: <HOST_LIST>
+  vars: <VAR_DICTS>
+  vars_files: <FILE_LIST>
+  become: true|false
+  ignore_errors: true|False
+  pre_tasks: <TASK_LIST>
+  roles:
+    - role: <ROLE_NAME>                  ╶┬╴ ROLE
+      vars: <VAR_DICTS>                  ╶╯
+  tasks:
+    - name: <TASK_NAME>                  ╶┬╴ TASK
+      vars: <VAR_DICTS>                   │
+      <MODULE_NAME>: <MOD_OPT_DICTS>      │
+      become: true|false                  │
+      changed_when: <CONDITION_LIST>      │
+      failed_when: <CONDITION_LIST>       │
+      ignore_errors: true|False           │
+      delegate_to: <INVENTORY_HOSTNAME>   │
+      loop: <CONDITION_LIST>              │
+      when: <CONDITION_LIST>              │
+      register: <VAR_NAME>                │
+      notify: <HANDLER_LIST>             ╶╯
+
+    - block: <TASK_LIST>                 ╶┬╴ BLOCK
+      rescue: <TASK_LIST>                 │
+      always: <TASK_LIST>                 │
+      when: <CONDITION_LIST>             ╶╯
+  post_tasks: <TASK_LIST>
+  handlers: <TASK_LIST>
+...
+
+
+
+ansible.cfg
+===========
+  [defaults]
+  inventory=<INVENTORY_PATH>
+  roles_path=<ROLES_PATH>
+  remote_user=<USER>
+  ask_pass=False|true
+
+
+  [privilege_escalation]
+  become=true|False
+  become_user=<USER>
+  become_method=su|sudo|psexec
+  become_ask_pass=true|False
+
+inventory.yaml
+==============
+  all:
+    children:
+      ungrouped:
+        hosts:
+          <HOST_DICTS>
+        vars:
+          <VAR_DICTS>
+      <GROUP_NAME>:
+        hosts:
+          <HOST_DICTS>
+        vars:
+          <VAR_DICTS>
+      <GROUP_NAME>: {}
+
+
+
+Variables Precedence
+--------------------
+  <PROJECT>/
+    ├╴ansible.cfg
+    ├╴group_vars/
+    │ ├╴all                     6
+    │ └╴<GROUP_NAME>            4
+    ├╴host_vars/
+    │ └╴<INVENTORY_HOSTNAME>    1
+    ├╴inventory/
+    │ ├╴group_vars/
+    │ │ ├╴all                   7
+    │ │ └╴<GROUP_NAME>          5
+    │ ├╴host_vars/
+    │ │ └╴<INVENTORY_HOSTNAME>  2
+    │ └╴<INVENTORY_FILE>        3h 8g
+    └╴playbook.yaml
+
+Inventory Variables
+-------------------
+  ansible_connection: local|ssh|winrm
+  ansible_host: <FQDN>
+  ansible_user: <USER>
+  ansible_become_user: <USER>
+  ansible_python_interpreter: auto|<LOCATION>
+
+  When identifying current managed hosts:
+    inventory_hostname
+    ansible_host
+    ansible_facts['hostname']   # short hostname
+    ansible_facts['fqdn']       # fully qualified domain name
+    ansible_play_hosts          # remainding hosts that haven't failed. used internally.
+
+TIPS:
+  Variables
+  =========
+    boolean & floating point numbers doesn't need to be quoted.
