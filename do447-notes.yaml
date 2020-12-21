@@ -6,8 +6,21 @@ CMD Syntax:
   ansible [-i <INVENTORY>] --list-host <HOST_PATTERN>
   ansible <HOST_PATTERN> [-m <MODULE>] [-a "<ARGUMENTS_TO_MODULE>"]
   ansible-doc -l|<MODULE>
-  ansible-playbook [-e <VAR>=<VALUE>]... [--syntax-check] [--check] [--diff] <PLAYBOOK>.yaml
+  ansible-playbook [-e <VAR>=<VALUE>]... \
+    [--[skip-]tags <TAG>,...] [-f|--forks <FORKS>] \
+    [--syntax-check] [--check] [--diff] <PLAYBOOK>.yaml
   ansible-inventory [--list] [--yaml]
+
+  Common options for ansible and ansible-playbook commands:
+  ---------------------------------------------------------
+  CMD Line options          ansible.cfg
+  ----------------          -----------
+  -b                        become
+  -u <REMOTE_USER>          remote_user
+  -k                        ask_pass
+  -K                        become_ask_pass
+  --become-method <METHOD>  become_method
+  --become-user <USER>      become_user
 
 
 YAML
@@ -39,11 +52,14 @@ Playbook Syntax:
     vars: <VAR_DICTS>
     vars_files: <FILE_LIST>
     become: true|false
+    gather_facts: True|false
     ignore_errors: true|False
     pre_tasks: <TASK_LIST>
     roles:
       - role: <ROLE_NAME>                  ╶┬╴ ROLE
-        vars: <VAR_DICTS>                  ╶╯
+        vars: <VAR_DICTS>                   │
+        tags: <TAG_LIST>                    │
+        become: true|false                 ╶╯
     tasks:
       - name: <TASK_NAME>                  ╶┬╴ TASK
         vars: <VAR_DICTS>                   │
@@ -56,11 +72,14 @@ Playbook Syntax:
         loop: <CONDITION_LIST>              │
         when: <CONDITION_LIST>              │
         register: <VAR_NAME>                │
+        tags: <TAG_LIST>                    │
         notify: <HANDLER_LIST>             ╶╯
+        listen: <HANDLER_NAME>              # ONLY used under handlers section
 
       - block: <TASK_LIST>                 ╶┬╴ BLOCK
         rescue: <TASK_LIST>                 │
         always: <TASK_LIST>                 │
+        become: true|false                  │
         when: <CONDITION_LIST>             ╶╯
     post_tasks: <TASK_LIST>
     handlers: <TASK_LIST>
@@ -74,9 +93,26 @@ Playbook Syntax:
         1. The task that notified the handler has a status of "changed"
         2. In the order defined, and not the notified order.
         3. Once regardless of how many times it was notified.
-        4. After ALL TASKS have completed for the PLAY. (EXCEPTION - force_handlers: true)
+        4. After ALL TASKS have completed for the PLAY.
+              EXCEPTION - force_handlers: true
+              EXCEPTION - calling to meta module with flush_handlers argument as one of the tasks.
+                - name: running notified handlers
+                  meta: flush_handlers
         5. In their own namespace. (You can't notify a playbooks handler from inside a role and vice versa)
 
+      Handlers will execute based on the above rules each time for pre_tasks, tasks and post_tasks.
+        1. pre_tasks
+        2.   handlers
+        3. roles
+        4. tasks
+        5.   handlers
+        6. post_tasks
+        7.   handlers
+
+  TAGS
+  ====
+    Tags in playbooks: always
+    Cmd line special tags: all, untagged, tagged
 
 Configuration File
 ==================
@@ -95,6 +131,9 @@ Configuration File
     remote_user = <USER>
     ask_pass    = False|true
     transport   = Smart|winrm       # winrm for Windows
+    forks       = 5|<NUM_OF_HOSTS>
+    callback_whitelist = <CALLBACK_PLUGIN>,...  # timer, profile_tasks, cgroup_perf_recap
+    stdout_callback = <STDOUT_PLUGIN>
 
     [privilege_escalation]
     become=true|False
@@ -104,6 +143,10 @@ Configuration File
 
     [inventory]
     enable_plugins=host_list, script, auto, yaml, ini, toml
+
+    [ssh_connection]
+    ssh_args = -o ControlMaster=auto -o ControlPersist=60s
+    pipelining = true               # REQUIRES requiretty sudo option
 
 Inventory
 =========
@@ -127,15 +170,15 @@ Variables
 =========
   SCOPE
   -----
-    Variables PRIORITY                        SCOPE
-    --------- --------                        -----
-    1. Global 1. -e CMD LINE OPTION              # cmd line or ansible.cfg config
-    2. Play                                   # play level
+    Variables PRIORITY                          SCOPE
+    --------- --------                          -----
+    1. Global 1. -e CMD LINE OPTION             # cmd line or ansible.cfg config
+    2. Play                                     # play level
               2. INCLUDE_VARS MODULE             PLAY - FROM INCLUDE TASK ONWARDS
               3. TASK VARS                       Task ONLY
               4. PLAY VARS_FILES                 PLAY
               5. PLAY VARS                       PLAY
-    3. Host                                   # inventory variables
+    3. Host                                     # inventory variables
               6. PLAYBOOK HOST_VARS              ╶┬╴Playbook
               7. INVENTORY HOST_VARS              │
               8. INVENTORY FILE HOST variables    │
@@ -173,6 +216,7 @@ Variables
     ansible_password: <PASSWORD>
 
     ansible_host: <FQDN>
+    ansible_become: true|false
     ansible_become_user: <USER>
     ansible_python_interpreter: auto|<LOCATION>
 
