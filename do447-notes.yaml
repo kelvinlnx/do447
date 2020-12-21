@@ -1,142 +1,187 @@
-Command Line Syntax:
-  ansible --list-host <HOST_PATTERN>
-  ansible <HOST_PATTERN> [-m <MODULE>] [-a "<MOD_OPT>=<VALUE>..."]
-  ansible-playbook <PLAYBOOK>.yml
+DO447: Advanced Automation - Ansible Best Practices
+###################################################
+
+CMD Syntax:
+===========
+  ansible [-i <INVENTORY>] --list-host <HOST_PATTERN>
+  ansible <HOST_PATTERN> [-m <MODULE>] [-a "<ARGUMENTS_TO_MODULE>"]
+  ansible-doc -l|<MODULE>
+  ansible-playbook [-e <VAR>=<VALUE>]... [--syntax-check] [--check] [--diff] <PLAYBOOK>.yaml
   ansible-inventory [--list] [--yaml]
 
 
-<LIST> =
-  - hosta
-  - hostb
-  - groupa
+YAML
+====
+  <LIST> =
+    - hosta
+    - hostb
+    - groupa
 
-<DICTIONARY> =
-  item: abc
-  msg: Hello World
-  value1: 12345
-  address: |
-    1, Block A,
-    ABC Avenue,
-    1234 FairyLand.
-  long_line: >
-    This is a very very very long single
-    line message that is written with
-    multiple repeats, repeating over
-    and over and over and over and over.
+  <DICTIONARY> =
+    item: abc
+    msg: Hello World
+    value1: 12345
+    address: |
+      1, Block A,
+      ABC Avenue,
+      1234 FairyLand.
+    long_line: >
+      This is a very very very long single
+      line message that is written with
+      multiple repeats, repeating over
+      and over and over and over and over.
+
+Playbook Syntax:
+================
+  ---
+  - name: <PLAY_NAME>
+    host: <HOST_LIST>
+    vars: <VAR_DICTS>
+    vars_files: <FILE_LIST>
+    become: true|false
+    ignore_errors: true|False
+    pre_tasks: <TASK_LIST>
+    roles:
+      - role: <ROLE_NAME>                  ╶┬╴ ROLE
+        vars: <VAR_DICTS>                  ╶╯
+    tasks:
+      - name: <TASK_NAME>                  ╶┬╴ TASK
+        vars: <VAR_DICTS>                   │
+        <MODULE_NAME>: <MOD_OPT_DICTS>      │
+        become: true|false                  │
+        changed_when: <CONDITION_LIST>      │
+        failed_when: <CONDITION_LIST>       │
+        ignore_errors: true|False           │
+        delegate_to: <INVENTORY_HOSTNAME>   │
+        loop: <CONDITION_LIST>              │
+        when: <CONDITION_LIST>              │
+        register: <VAR_NAME>                │
+        notify: <HANDLER_LIST>             ╶╯
+
+      - block: <TASK_LIST>                 ╶┬╴ BLOCK
+        rescue: <TASK_LIST>                 │
+        always: <TASK_LIST>                 │
+        when: <CONDITION_LIST>             ╶╯
+    post_tasks: <TASK_LIST>
+    handlers: <TASK_LIST>
+  ...
+
+  HANDLERS
+  ========
+    RULES
+    -----
+      Handlers will only execute:
+        1. The task that notified the handler has a status of "changed"
+        2. In the order defined, and not the notified order.
+        3. Once regardless of how many times it was notified.
+        4. After ALL TASKS have completed for the PLAY. (EXCEPTION - force_handlers: true)
+        5. In their own namespace. (You can't notify a playbooks handler from inside a role and vice versa)
 
 
----
-- name: <PLAY_NAME>
-  host: <HOST_LIST>
-  vars: <VAR_DICTS>
-  vars_files: <FILE_LIST>
-  become: true|false
-  ignore_errors: true|False
-  pre_tasks: <TASK_LIST>
-  roles:
-    - role: <ROLE_NAME>                  ╶┬╴ ROLE
-      vars: <VAR_DICTS>                  ╶╯
-  tasks:
-    - name: <TASK_NAME>                  ╶┬╴ TASK
-      vars: <VAR_DICTS>                   │
-      <MODULE_NAME>: <MOD_OPT_DICTS>      │
-      become: true|false                  │
-      changed_when: <CONDITION_LIST>      │
-      failed_when: <CONDITION_LIST>       │
-      ignore_errors: true|False           │
-      delegate_to: <INVENTORY_HOSTNAME>   │
-      loop: <CONDITION_LIST>              │
-      when: <CONDITION_LIST>              │
-      register: <VAR_NAME>                │
-      notify: <HANDLER_LIST>             ╶╯
+Configuration File
+==================
+  Location and Precedence
+  -----------------------
+    1. $ANSIBLE_CONFIG              # Environment Variable
+    2. ./ansible.cfg                # current directory
+    3. ~/.ansible.cfg               # hidden file name in home directory
+    4. /etc/ansible/ansible.cfg     # Default
 
-    - block: <TASK_LIST>                 ╶┬╴ BLOCK
-      rescue: <TASK_LIST>                 │
-      always: <TASK_LIST>                 │
-      when: <CONDITION_LIST>             ╶╯
-  post_tasks: <TASK_LIST>
-  handlers: <TASK_LIST>
-...
+  ansible.cfg Syntax (INI Format)
+  -------------------------------
+    [defaults]
+    inventory   = <INVENTORY_PATH>
+    roles_path  = <ROLES_PATH>
+    remote_user = <USER>
+    ask_pass    = False|true
+    transport   = Smart|winrm       # winrm for Windows
 
+    [privilege_escalation]
+    become=true|False
+    become_user=<USER>
+    become_method=su|sudo|psexec
+    become_ask_pass=true|False
 
-Configuration File Locations and Precedence
--------------------------------------------
-  1. $ANSIBLE_CONFIG              # Environment Variable
-  2. ./ansible.cfg                # current directory
-  3. ~/.ansible.cfg               # hidden file name in home directory
-  4. /etc/ansible/ansible.cfg     # Default
+    [inventory]
+    enable_plugins=host_list, script, auto, yaml, ini, toml
 
-ansible.cfg
-===========
-  [defaults]
-  inventory   = <INVENTORY_PATH>
-  roles_path  = <ROLES_PATH>
-  remote_user = <USER>
-  ask_pass    = False|true
-  transport   = Smart|winrm       # winrm for Windows
+Inventory
+=========
+  Inventory YAML Syntax
+  ---------------------
+    all:
+      children:
+        ungrouped:
+          hosts:
+            <HOST_DICTS>
+          vars:
+            <VAR_DICTS>
+        <GROUP_NAME>:
+          hosts:
+            <HOST_DICTS>
+          vars:
+            <VAR_DICTS>
+        <GROUP_NAME>: {}
 
-  [privilege_escalation]
-  become=true|False
-  become_user=<USER>
-  become_method=su|sudo|psexec
-  become_ask_pass=true|False
+Variables
+=========
+  SCOPE
+  -----
+    Variables PRIORITY                        SCOPE
+    --------- --------                        -----
+    1. Global 1. -e CMD LINE OPTION              # cmd line or ansible.cfg config
+    2. Play                                   # play level
+              2. INCLUDE_VARS MODULE             PLAY - FROM INCLUDE TASK ONWARDS
+              3. TASK VARS                       Task ONLY
+              4. PLAY VARS_FILES                 PLAY
+              5. PLAY VARS                       PLAY
+    3. Host                                   # inventory variables
+              6. PLAYBOOK HOST_VARS              ╶┬╴Playbook
+              7. INVENTORY HOST_VARS              │
+              8. INVENTORY FILE HOST variables    │
+              9. PLAYBOOK GROUP_VARS              │
+              10. INVENTORY GROUP_VARS            │
+              11. PLAYBOOK GROUP_VARS/all         │
+              12. INVENTORY GROUP_VARS/all        │
+              13. INVENTORY FILE GROUP VARIABLES ╶╯
 
-  [inventory]
-  enable_plugins=host_list, script, auto, yaml, ini, toml
+  Variables Precedence
+  --------------------
+    <PROJECT>/
+      ├╴ansible.cfg                             # INI Syntax
+      ├╴group_vars/
+      │ ├╴all                     6
+      │ └╴<GROUP_NAME>            4
+      ├╴host_vars/
+      │ └╴<INVENTORY_HOSTNAME>    1
+      ├╴inventory/
+      │ ├╴group_vars/
+      │ │ ├╴all                   7
+      │ │ └╴<GROUP_NAME>          5
+      │ ├╴host_vars/
+      │ │ └╴<INVENTORY_HOSTNAME>  2
+      │ └╴<INVENTORY_FILE>        3h 8g         # INI Syntax
+      └╴playbook.yaml
 
-inventory.yaml
-==============
-  all:
-    children:
-      ungrouped:
-        hosts:
-          <HOST_DICTS>
-        vars:
-          <VAR_DICTS>
-      <GROUP_NAME>:
-        hosts:
-          <HOST_DICTS>
-        vars:
-          <VAR_DICTS>
-      <GROUP_NAME>: {}
+  Inventory Variables
+  -------------------
+    ansible_connection: local|ssh|winrm              ╶┬╴ winrm is for Windows
+    ansible_winrm_transport: basic/credssp            │
+    ansible_winrm_server_cert_validation: ignore     ╶╯
+    ansible_port: 5986
+    ansible_user: <USERNAME>
+    ansible_password: <PASSWORD>
 
-Variables Precedence
---------------------
-  <PROJECT>/
-    ├╴ansible.cfg                             # INI Syntax
-    ├╴group_vars/
-    │ ├╴all                     6
-    │ └╴<GROUP_NAME>            4
-    ├╴host_vars/
-    │ └╴<INVENTORY_HOSTNAME>    1
-    ├╴inventory/
-    │ ├╴group_vars/
-    │ │ ├╴all                   7
-    │ │ └╴<GROUP_NAME>          5
-    │ ├╴host_vars/
-    │ │ └╴<INVENTORY_HOSTNAME>  2
-    │ └╴<INVENTORY_FILE>        3h 8g         # INI Syntax
-    └╴playbook.yaml
+    ansible_host: <FQDN>
+    ansible_become_user: <USER>
+    ansible_python_interpreter: auto|<LOCATION>
 
-Inventory Variables
--------------------
-  ansible_connection: local|ssh|winrm              ╶┬╴ winrm is for Windows
-  ansible_winrm_transport: basic/credssp            │
-  ansible_winrm_server_cert_validation: ignore     ╶╯
-  ansible_port: 5986
-  ansible_user: <USERNAME>
-  ansible_password: <PASSWORD>
-
-  ansible_host: <FQDN>
-  ansible_become_user: <USER>
-  ansible_python_interpreter: auto|<LOCATION>
-
-  When identifying current managed hosts:
-    inventory_hostname
-    ansible_host
-    ansible_facts['hostname']   # short hostname
-    ansible_facts['fqdn']       # fully qualified domain name
-    ansible_play_hosts          # remainding hosts that haven't failed. used internally.
+    When identifying current managed hosts:
+      inventory_hostname
+      ansible_host
+      ansible_facts['hostname']   # short hostname
+      ansible_facts['fqdn']       # fully qualified domain name
+      ansible_play_hosts          # remainding hosts that haven't failed. used internally.
 
 TIPS:
   Variables
