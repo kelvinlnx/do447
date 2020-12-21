@@ -59,14 +59,21 @@ Command Line Syntax:
 ...
 
 
+Configuration File Locations and Precedence
+-------------------------------------------
+  1. $ANSIBLE_CONFIG              # Environment Variable
+  2. ./ansible.cfg                # current directory
+  3. ~/.ansible.cfg               # hidden file name in home directory
+  4. /etc/ansible/ansible.cfg     # Default
 
 ansible.cfg
 ===========
   [defaults]
-  inventory=<INVENTORY_PATH>
-  roles_path=<ROLES_PATH>
-  remote_user=<USER>
-  ask_pass=False|true
+  inventory   = <INVENTORY_PATH>
+  roles_path  = <ROLES_PATH>
+  remote_user = <USER>
+  ask_pass    = False|true
+  transport   = Smart|winrm       # winrm for Windows
 
   [privilege_escalation]
   become=true|False
@@ -93,8 +100,6 @@ inventory.yaml
           <VAR_DICTS>
       <GROUP_NAME>: {}
 
-
-
 Variables Precedence
 --------------------
   <PROJECT>/
@@ -115,9 +120,14 @@ Variables Precedence
 
 Inventory Variables
 -------------------
-  ansible_connection: local|ssh|winrm
+  ansible_connection: local|ssh|winrm              ╶┬╴ winrm is for Windows
+  ansible_winrm_transport: basic/credssp            │
+  ansible_winrm_server_cert_validation: ignore     ╶╯
+  ansible_port: 5986 
+  ansible_user: <USERNAME>
+  ansible_password: <PASSWORD>
+
   ansible_host: <FQDN>
-  ansible_user: <USER>
   ansible_become_user: <USER>
   ansible_python_interpreter: auto|<LOCATION>
 
