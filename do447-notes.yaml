@@ -5,7 +5,7 @@ CMD Syntax:
 ===========
   ansible [-i <INVENTORY>] --list-host <HOST_PATTERN>
   ansible <HOST_PATTERN> [-m <MODULE>] [-a "<ARGUMENTS_TO_MODULE>"]
-  ansible-doc -l|<MODULE>
+  ansible-doc [-t callback|lookup] -l|<KEYWORD>
   ansible-playbook [-e <VAR>=<VALUE>]... \
     [--[skip-]tags <TAG>,...] [-f|--forks <FORKS>] \
     [--syntax-check] [--check] [--diff] <PLAYBOOK>.yaml
@@ -54,6 +54,8 @@ Playbook Syntax:
     become: true|false
     gather_facts: True|false
     ignore_errors: true|False
+    serial: <NUM_OR_PERCENTAGE_OF_HOSTS>    # number/percentage of host to run per play
+    max_fail_percentage: <PERCENTAGE>       # acceptable failure percentage per play run
     pre_tasks: <TASK_LIST>
     roles:
       - role: <ROLE_NAME>                  ╶┬╴ ROLE
@@ -69,6 +71,8 @@ Playbook Syntax:
         failed_when: <CONDITION_LIST>       │
         ignore_errors: true|False           │
         delegate_to: <INVENTORY_HOSTNAME>   │
+        delegate_facts: true|False          │
+        run_once: true|False                │
         loop: <CONDITION_LIST>              │
         when: <CONDITION_LIST>              │
         register: <VAR_NAME>                │
@@ -133,7 +137,7 @@ Configuration File
     transport   = Smart|winrm       # winrm for Windows
     forks       = 5|<NUM_OF_HOSTS>
     callback_whitelist = <CALLBACK_PLUGIN>,...  # timer, profile_tasks, cgroup_perf_recap
-    stdout_callback = <STDOUT_PLUGIN>
+    stdout_callback = <STDOUT_PLUGIN>           # unixy, yaml
 
     [privilege_escalation]
     become=true|False
