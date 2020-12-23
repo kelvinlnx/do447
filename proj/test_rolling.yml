@@ -1,0 +1,22 @@
+---
+- name: test rolling updates
+  hosts: webservers
+  serial: 1
+  max_fail_percentage: 70%
+  tasks:
+    - name: T1
+      debug:
+        msg: remove self from master
+
+    - name: T2
+      debug:
+        msg: patch me up
+      failed_when: inventory_hostname == "servera.lab.example.com"
+
+    - name: T3
+      debug:
+        msg: reboot
+
+    - name: T4
+      debug:
+        msg: add self to cluster

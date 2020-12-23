@@ -1,0 +1,18 @@
+---
+- name: testing lookup
+  hosts: localhost
+  vars:
+    my_hosts: "{{ lookup('file', '/etc/hosts', '/etc/issue') }}"
+    your_hosts: "{{ query('file', '/etc/hosts', '/etc/issue') }}"
+  tasks:
+    - name: lookup
+      debug:
+        msg: "{{ my_hosts }}"
+
+    - name: query
+      debug:
+        msg: "{{ your_hosts }}"
+
+    - name: T3
+      debug:
+        msg: the environment variable PWD is {{ lookup('env', 'PWD') }}

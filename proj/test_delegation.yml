@@ -1,0 +1,55 @@
+---
+- name: test delegate tasks and facts
+  hosts: servera.lab.example.com
+  gather_facts: false
+  tasks:
+    - name: Delegate Task
+      block:
+        - name: run command on servera
+          command: hostname
+          register: cmd_result
+
+        - debug:
+            var: cmd_result
+
+        - name: display result
+          debug:
+            msg: the server name is "{{ cmd_result.stdout }}"
+
+        - name: DELEGATE command to serverb
+          command: hostname
+          #command: myserver remove {{ansible_facts['fqdn']}} from cluster
+          delegate_to: serverb.lab.example.com
+          register: cmd_result
+
+        - name: display the result of previous command
+          debug:
+            msg: the server name is "{{ cmd_result.stdout }}"
+
+    - name: Delegate Facts
+      block:
+        - name: display hostvars for servera and serverb
+          debug:
+            var: hostvars['{{ item }}']
+          loop:
+            - servera.lab.example.com
+            - serverb.lab.example.com
+
+        - name: delegate facts
+          setup:
+          delegate_to: serverb.lab.example.com
+          delegate_facts: true
+
+        - name: display hostvars for servera and serverb
+          debug:
+            var: hostvars['{{ item }}']
+          loop:
+            - servera.lab.example.com
+            - serverb.lab.example.com
+
+    - name: use facts
+      debug:
+        msg: |
+          This is currently executed in {{ inventory_hostname }}
+          But we are able to use facts from serverb {{ hostvars['serverb.lab.example.com']['ansible_facts']['fqdn']}}
+      when: hostvars['serverb.lab.example.com']['ansible_facts']['fqdn'] is defined

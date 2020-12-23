@@ -1,0 +1,52 @@
+---
+- name: testing execution order
+  hosts: webservers
+  order: Inventory|reverse_inventory|sorted|reverse_sorted|shuffle
+  gather_facts: false
+  force_handlers: true
+  pre_tasks:
+    - name: Pre 1
+      debug:
+        msg: Hello World
+      changed_when: true
+      notify:
+        - hand b
+  tasks:
+    - name: T1
+      debug:
+        msg: Task 1
+      changed_when: true
+      notify:
+        - hand c
+        - hand a
+
+    - name: T2
+      #debug:
+      #  msg: Task 2
+      command: sleep 5
+      changed_when: true
+      #failed_when: true
+      notify:
+        - hand b
+
+    - name: T3
+      debug:
+        msg: Task 3
+      changed_when: true
+      notify:
+        - hand c
+        - hand b
+
+  handlers:
+    - name: hand a
+      debug:
+        msg: Handler A
+
+    - name: hand b
+      debug:
+        msg: Handler B
+
+    - name: hand c
+      debug:
+        msg: Handler C
+...

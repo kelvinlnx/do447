@@ -1,0 +1,9 @@
+servere.lab.example.com
+mr.kacau
+
+[webservers]
+server[a:b].lab.example.com
+
+[dbservers]
+serverc.lab.example.com
+serverd.lab.example.com

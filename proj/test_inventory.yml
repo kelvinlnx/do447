@@ -1,0 +1,17 @@
+---
+- name: testing variables
+  hosts: webservers
+  gather_facts: false
+  vars:
+    value10: 1
+  tasks:
+    - name: Display the value of value1
+      debug:
+        msg: The value of value1 is {{ value1 }}
+      when: inventory_hostname != "serverb.lab.example.com"
+#      when: value1 is defined
+
+    - name: Task 2
+      debug:
+        msg: This is task 2
+...

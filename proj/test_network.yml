@@ -1,0 +1,18 @@
+---
+- name: test network
+  hosts: servera.lab.example.com
+  gather_facts: false
+  tasks:
+    - name: Gather Facts
+      setup:
+        gather_subset:
+          - '!all'
+          - network
+
+    - name: display facts
+      debug:
+        var: hostvars['servera.lab.example.com']
+
+    - name: ip address of servera
+      debug:
+        msg: servera ip address {{ ansible_facts['default_ipv4']['address'] | ipaddr }}

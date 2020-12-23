@@ -1,0 +1,19 @@
+---
+- name: testing privilege escalation
+  hosts: webservers
+  #become: true
+  tasks:
+    - name: T1
+      debug:
+        msg: Task 1
+
+    - name: install the httpd package
+      yum:
+        name: httpd
+        state: latest
+      become: true
+
+    - name: T3
+      debug:
+        msg: Task 3
+...

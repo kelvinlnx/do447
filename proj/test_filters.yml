@@ -1,0 +1,48 @@
+---
+- name: testing filters
+  hosts: localhost
+  vars:
+    my_list: [ 1, [2, [3, 4]], 5   ]
+    my_records:
+      - name: abc
+        age: 123
+      - name: def
+        age: 10
+      - name: ghi
+        age: 99
+    user_name: abc
+    your_name: "{{ my_name | default('dummy') }}"
+  tasks:
+    - name: T1
+      copy:
+        content: |
+          Original:
+          {{ my_records }}
+
+          to_json:
+          {{ my_records | to_json | capitalize }}
+
+          {{ user_name | capitalize }}
+
+          to_nice_json:
+          {{ my_records | to_nice_json }}
+
+          to_yaml:
+          {{ my_records | to_yaml }}
+
+          to_nice_yaml:
+          {{ my_records | to_nice_yaml }}
+        dest: ./dummy.log
+
+    - name: T2
+      debug:
+        msg: Welcome to the program, username - {{ your_name }}
+
+    - name: T3
+      debug:
+        msg: item is {{ item }}
+      loop: "{{ my_list | flatten }}"
+
+    - name: display my_list
+      debug:
+        msg: "{{ my_list }}"

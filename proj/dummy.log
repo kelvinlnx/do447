@@ -1,0 +1,37 @@
+Original:
+[{'name': 'abc', 'age': 123}, {'name': 'def', 'age': 10}, {'name': 'ghi', 'age': 99}]
+
+to_json:
+[{"name": "abc", "age": 123}, {"name": "def", "age": 10}, {"name": "ghi", "age": 99}]
+
+Abc
+
+to_nice_json:
+[
+    {
+        "age": 123,
+        "name": "abc"
+    },
+    {
+        "age": 10,
+        "name": "def"
+    },
+    {
+        "age": 99,
+        "name": "ghi"
+    }
+]
+
+to_yaml:
+- {age: 123, name: abc}
+- {age: 10, name: def}
+- {age: 99, name: ghi}
+
+
+to_nice_yaml:
+-   age: 123
+    name: abc
+-   age: 10
+    name: def
+-   age: 99
+    name: ghi
